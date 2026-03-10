@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "causal-data-quality-auditor"
+version = "0.1.0"
+description = "Herramienta CLI que detecta drift entre datasets de producción y entrenamiento usando KL Divergence. Genera reportes automáticos en Markdown vía GitHub Actions. Pensada para auditoría de calidad de datos en sistemas distribuidos."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+license = "MIT"
+authors = [
+    {name = "Gerardo Toboso", email = "gerardotoboso1909@gmail.com"}
+]
+maintainers = [
+    {name = "Gerardo Toboso", email = "gerardotoboso1909@gmail.com"}
+]
+
+[tool.setuptools]
+package-dir = {"" = "dqa"}
+
+[tool.setuptools.packages.find]
+where = ["dqa"]
+include = ["*"]
+exclude = ["tests*", "*.tests*", "*.tests.*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-check>=2.6.2",
+    "pytest-cov>=7.0.0",
+    "pytest-html==3.2.0",
+]
