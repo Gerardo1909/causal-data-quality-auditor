@@ -1,4 +1,7 @@
-"""Modelos de datos del dominio. Sin dependencias externas."""
+"""
+Modelos de datos del dominio.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -7,7 +10,9 @@ from typing import Any
 
 
 class DriftLevel(IntEnum):
-    """Nivel de severidad del drift detectado en una columna o dataset."""
+    """
+    Nivel de severidad del drift detectado en una columna o dataset.
+    """
 
     STABLE = 0
     WARNING = 1
@@ -19,7 +24,9 @@ class DriftLevel(IntEnum):
 
 @dataclass
 class AnalysisResult:
-    """Resultado de aplicar un único análisis estadístico a un par de columnas."""
+    """
+    Resultado de aplicar un único análisis estadístico a un par de columnas.
+    """
 
     level: DriftLevel
     details: dict[str, Any]
@@ -27,11 +34,15 @@ class AnalysisResult:
 
 @dataclass
 class ColumnReport:
-    """Reporte de drift para una columna individual, agregando todos sus análisis."""
+    """
+    Reporte de drift para una columna individual, agregando todos sus análisis.
+    """
 
     name: str
     dtype: str
-    results: dict[str, AnalysisResult]  # clave = nombre del análisis (ks_test, psi, etc.)
+    results: dict[
+        str, AnalysisResult
+    ]  # clave = nombre del análisis (ks_test, psi, etc.)
 
     @property
     def worst_level(self) -> DriftLevel:
@@ -42,11 +53,15 @@ class ColumnReport:
 
 @dataclass
 class SchemaDiff:
-    """Diferencias estructurales entre dos datasets (columnas agregadas, removidas, tipo cambiado)."""
+    """
+    Diferencias estructurales entre dos datasets (columnas agregadas, removidas, tipo cambiado).
+    """
 
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    type_changed: dict[str, tuple[str, str]] = field(default_factory=dict)  # col -> (dtype_ref, dtype_prod)
+    type_changed: dict[str, tuple[str, str]] = field(
+        default_factory=dict
+    )  # col -> (dtype_ref, dtype_prod)
 
     @property
     def has_changes(self) -> bool:
@@ -55,7 +70,9 @@ class SchemaDiff:
 
 @dataclass
 class DatasetReport:
-    """Reporte completo de drift a nivel de dataset."""
+    """
+    Reporte completo de drift a nivel de dataset.
+    """
 
     columns: list[ColumnReport]
     schema_diff: SchemaDiff = field(default_factory=SchemaDiff)
