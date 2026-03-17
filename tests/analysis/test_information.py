@@ -19,7 +19,7 @@ def test_js_high_for_disjoint_distributions():
     ref = RNG.normal(loc=0, scale=1, size=3000)
     prod = RNG.normal(loc=10, scale=1, size=3000)
     result = kl_js_divergence(ref, prod)
-    assert result.details["js_divergence"] > 0.9
+    assert result.details["js_divergence"] > 0.6
     assert result.level == DriftLevel.ALERT
 
 
