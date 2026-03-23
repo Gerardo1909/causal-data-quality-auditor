@@ -10,24 +10,19 @@ from __future__ import annotations
 
 from typing import Optional
 
-from dqa.analysis.classical import ks_test, population_stability_index
-from dqa.analysis.information import kl_js_divergence
+from dqa.analysis.classical import (
+    KSTestDriftAnalyzer,
+    PopulationStabilityIndexDriftAnalyzer,
+)
+from dqa.analysis.information import KLJSDivergenceDriftAnalyzer
 from dqa.analysis.schema import common_numeric_columns, detect_schema_drift
 from dqa.domain.models import ColumnReport, DatasetReport
 from dqa.domain.ports import ColumnAnalyzer, DataReader
 
-
-def _make_analyzer(analysis_name: str, fn) -> ColumnAnalyzer:
-    """
-    Construye un objeto que cumple el Protocol ColumnAnalyzer desde una función.
-    """
-    return type("_Analyzer", (), {"name": analysis_name, "analyze": staticmethod(fn)})()
-
-
 _DEFAULT_ANALYZERS: list[ColumnAnalyzer] = [
-    _make_analyzer("ks_test", ks_test),
-    _make_analyzer("psi", population_stability_index),
-    _make_analyzer("kl_js", kl_js_divergence),
+    KSTestDriftAnalyzer(),
+    PopulationStabilityIndexDriftAnalyzer(),
+    KLJSDivergenceDriftAnalyzer(),
 ]
 
 

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from dqa.domain.models import DatasetReport, DriftLevel
 from dqa.engine import run_analysis
@@ -43,7 +42,9 @@ def test_analyzes_all_common_numeric_columns():
 def test_filters_to_requested_columns():
     ref = {"price": RNG.normal(0, 1, 200), "age": RNG.normal(30, 5, 200)}
     prod = {"price": RNG.normal(0, 1, 200), "age": RNG.normal(30, 5, 200)}
-    report = run_analysis("ref", "prod", reader=make_reader(ref, prod), columns=["price"])
+    report = run_analysis(
+        "ref", "prod", reader=make_reader(ref, prod), columns=["price"]
+    )
     assert len(report.columns) == 1
     assert report.columns[0].name == "price"
 
@@ -78,4 +79,4 @@ def test_each_column_has_all_default_analysis_keys():
     report = run_analysis("ref", "prod", reader=make_reader(ref, prod))
     assert len(report.columns) == 1
     keys = set(report.columns[0].results.keys())
-    assert {"ks_test", "psi", "kl_js"} == keys
+    assert {"KS Test", "PSI", "kl_js"} == keys
