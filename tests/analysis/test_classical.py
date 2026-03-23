@@ -1,12 +1,18 @@
 import numpy as np
 
-from dqa.analysis.classical import ks_test, population_stability_index
+from dqa.analysis.classical import (
+    KSTestDriftAnalyzer,
+    PopulationStabilityIndexDriftAnalyzer,
+)
 from dqa.domain.models import DriftLevel
 
 RNG = np.random.default_rng(42)
 REF = RNG.normal(loc=0, scale=1, size=2000)
 PROD_SAME = RNG.normal(loc=0, scale=1, size=2000)
 PROD_DRIFT = RNG.normal(loc=3.0, scale=1, size=2000)
+
+ks_test = KSTestDriftAnalyzer().analyze
+population_stability_index = PopulationStabilityIndexDriftAnalyzer().analyze
 
 
 def test_ks_stable_for_same_distribution():

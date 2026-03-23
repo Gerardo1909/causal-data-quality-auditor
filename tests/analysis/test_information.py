@@ -2,10 +2,11 @@ import time
 
 import numpy as np
 
-from dqa.analysis.information import kl_js_divergence
+from dqa.analysis.information import KLJSDivergenceDriftAnalyzer
 from dqa.domain.models import DriftLevel
 
 RNG = np.random.default_rng(42)
+kl_js_divergence = KLJSDivergenceDriftAnalyzer().analyze
 
 
 def test_js_near_zero_for_identical_data():
