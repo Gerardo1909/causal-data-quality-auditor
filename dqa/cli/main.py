@@ -15,9 +15,30 @@ from dqa.adapters.reporters.rich_reporter import RichReporter
 from dqa.domain.models import DriftLevel
 from dqa.engine import run_analysis
 
+_APP_HELP = (
+    "Detecta drift estadístico entre dos datasets y reporta columnas que\n"
+    "han cambiado de distribución entre entrenamiento y producción.\n\n"
+    "Formatos soportados: .parquet  .csv  .ndjson\n"
+    "Se pueden mezclar formatos (ej: referencia .csv y producción .parquet).\n\n"
+    "Exit codes:\n"
+    "  0  Sin drift relevante (o --fail-on never)\n"
+    "  1  Drift detectado al nivel configurado (--fail-on)\n"
+    "  2  Error de entrada: formato no soportado u otro problema\n"
+)
+
+# Cada ejemplo como párrafo separado (\n\n) para que Typer+Rich los renderice en líneas distintas.
+_COMPARE_EPILOG = (
+    "Ejemplos:\n\n"
+    "  $ dqa compare train.parquet prod.parquet\n\n"
+    "  $ dqa compare train.parquet prod.parquet -c age,price\n\n"
+    "  $ dqa compare train.parquet prod.parquet -f markdown -o reporte.md\n\n"
+    "  $ dqa compare train.parquet prod.parquet --fail-on warning\n\n"
+    "  $ dqa compare ref.csv prod.parquet\n"
+)
+
 app = typer.Typer(
     name="dqa",
-    help="Detecta drift estadístico entre dos datasets.",
+    help=_APP_HELP,
     add_completion=False,
 )
 
@@ -45,29 +66,77 @@ _FAIL_THRESHOLDS: dict[FailOn, DriftLevel | None] = {
 }
 
 
-@app.command()
+@app.command(epilog=_COMPARE_EPILOG)
 def compare(
-    reference: str = typer.Argument(..., help="Dataset de referencia (entrenamiento)."),
-    production: str = typer.Argument(..., help="Dataset de producción."),
+    reference: str = typer.Argument(
+        ...,
+        help=(
+            "Ruta al dataset de referencia (entrenamiento). "
+            "Formatos: .parquet, .csv, .ndjson"
+        ),
+    ),
+    production: str = typer.Argument(
+        ...,
+        help=(
+            "Ruta al dataset de producción. "
+            "Puede ser un formato distinto al de referencia."
+        ),
+    ),
     columns: Optional[str] = typer.Option(
-        None, "--columns", "-c", help="Columnas a analizar, separadas por coma."
+        None,
+        "--columns",
+        "-c",
+        help=(
+            "Columnas numéricas a analizar, separadas por coma (ej: age,price). "
+            "Por defecto analiza todas las columnas numéricas comunes a ambos datasets."
+        ),
     ),
     format: OutputFormat = typer.Option(
-        "terminal", "--format", "-f", help="Formato de salida."
+        "terminal",
+        "--format",
+        "-f",
+        help=(
+            "Formato del reporte de salida. "
+            "'terminal' muestra una tabla coloreada en consola; "
+            "'markdown' genera texto Markdown (usar con --output para guardar en archivo)."
+        ),
     ),
     output: Optional[str] = typer.Option(
-        None, "--output", "-o", help="Archivo de salida (con --format markdown)."
+        None,
+        "--output",
+        "-o",
+        help=(
+            "Ruta del archivo donde guardar el reporte (solo con --format markdown). "
+            "Si se omite, el reporte Markdown se imprime en la terminal."
+        ),
     ),
     fail_on: FailOn = typer.Option(
-        "alert", "--fail-on", help="Nivel mínimo que dispara exit code 1."
+        "alert",
+        "--fail-on",
+        help=(
+            "Nivel mínimo de drift que causa exit code 1 (util para CI/CD). "
+            "'alert': solo falla en drift severo (PSI > 0.2). "
+            "'warning': falla ante cualquier drift moderado (PSI > 0.1). "
+            "'never': siempre retorna 0 sin importar el resultado."
+        ),
     ),
     bayesian: bool = typer.Option(
         False,
         "--bayesian",
-        help="Activa análisis bayesiano (requiere uv sync --extra bayesian).",
+        help=(
+            "Activa analisis bayesiano (Layer 3) con PyMC: ajusta Normal(mu, sigma) "
+            "a cada dataset y compara intervalos HDI al 94%. "
+            "Requiere dependencias opcionales: uv sync --extra bayesian"
+        ),
     ),
 ) -> None:
-    """Compara dos datasets y reporta drift estadístico por columna."""
+    """
+    Compara dos datasets y reporta drift estadistico por columna.
+
+    Ejecuta tres capas de analisis sobre cada columna numerica comun:
+    KS test + PSI (Layer 1) y divergencia KL/JS (Layer 2).
+    Opcionalmente, analisis bayesiano con PyMC (Layer 3, requiere --bayesian).
+    """
     col_list = [c.strip() for c in columns.split(",")] if columns else None
     extra = _load_bayesian_analyzer() if bayesian else []
 
